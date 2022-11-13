@@ -174,53 +174,42 @@ void mm_stranssen(int N, double *A, double *B, double *C) {
 
 	double *S1 = (double*)malloc(n*n*sizeof(double));
 	matrix_sub_parallel(n, B12, B22, S1);
-
-	double *S2 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A11, A12, S2);
-
-	double *S3 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A21, A22, S3);
-
-	double *S4 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, B21, B11, S4);
-
-	double *S5 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A11, A22, S5);
-
-	double *S6 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B11, B22, S6);
-
-	double *S7 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, A12, A22, S7);
-
-	double *S8 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B21, B22, S8);
-
-	double *S9 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, A11, A21, S9);
-
-	double *S10 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B11, B12, S10);
-
-
 	double *P1 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, A11, S1, P1);
 
+	double *S2 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, A11, A12, S2);
 	double *P2 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, S2, B22, P2);
 
+	double *S3 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, A21, A22, S3);
 	double *P3 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, S3, B11, P3);
 
+	double *S4 = (double*)malloc(n*n*sizeof(double));
+	matrix_sub_parallel(n, B21, B11, S4);
 	double *P4 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, A22, S4, P4);
 
+	double *S5 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, A11, A22, S5);
+	double *S6 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, B11, B22, S6);
 	double *P5 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, S5, S6, P5);
 
+	double *S7 = (double*)malloc(n*n*sizeof(double));
+	matrix_sub_parallel(n, A12, A22, S7);
+	double *S8 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, B21, B22, S8);
 	double *P6 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, S7, S8, P6);
 
+	double *S9 = (double*)malloc(n*n*sizeof(double));
+	matrix_sub_parallel(n, A11, A21, S9);
+	double *S10 = (double*)malloc(n*n*sizeof(double));
+	matrix_sum_parallel(n, B11, B12, S10);
 	double *P7 = (double*)malloc(n*n*sizeof(double));
 	mm_stranssen(n, S9, S10, P7);
 	

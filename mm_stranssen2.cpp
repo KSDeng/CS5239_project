@@ -8,7 +8,7 @@ using namespace std;
 #define RAND_LOWER_BOUND 1
 #define RAND_UPPER_BOUND 2
 
-#define SIZE_BOUND 32
+#define SIZE_BOUND 256
 
 /* Utils begin */
 int32_t usage() {
@@ -173,46 +173,63 @@ void mm_stranssen(int N, double *A, double *B, double *C) {
 	matrix_divide_parallel(N, B, n, B11, B12, B21, B22);
 
 	double *S1 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, B12, B22, S1);
-	double *P1 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, A11, S1, P1);
-
 	double *S2 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A11, A12, S2);
-	double *P2 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, S2, B22, P2);
-
 	double *S3 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A21, A22, S3);
-	double *P3 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, S3, B11, P3);
-
 	double *S4 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, B21, B11, S4);
-	double *P4 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, A22, S4, P4);
-
 	double *S5 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, A11, A22, S5);
 	double *S6 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B11, B22, S6);
-	double *P5 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, S5, S6, P5);
-
 	double *S7 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, A12, A22, S7);
 	double *S8 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B21, B22, S8);
-	double *P6 = (double*)malloc(n*n*sizeof(double));
-	mm_stranssen(n, S7, S8, P6);
-
 	double *S9 = (double*)malloc(n*n*sizeof(double));
-	matrix_sub_parallel(n, A11, A21, S9);
 	double *S10 = (double*)malloc(n*n*sizeof(double));
-	matrix_sum_parallel(n, B11, B12, S10);
+
+	double *P1 = (double*)malloc(n*n*sizeof(double));
+	double *P2 = (double*)malloc(n*n*sizeof(double));
+	double *P3 = (double*)malloc(n*n*sizeof(double));
+	double *P4 = (double*)malloc(n*n*sizeof(double));
+	double *P5 = (double*)malloc(n*n*sizeof(double));
+	double *P6 = (double*)malloc(n*n*sizeof(double));
 	double *P7 = (double*)malloc(n*n*sizeof(double));
+
+#pragma omp task firstprivate(n) 
+{
+	matrix_sub_parallel(n, B12, B22, S1);
+	mm_stranssen(n, A11, S1, P1);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sum_parallel(n, A11, A12, S2);
+	mm_stranssen(n, S2, B22, P2);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sum_parallel(n, A21, A22, S3);
+	mm_stranssen(n, S3, B11, P3);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sub_parallel(n, B21, B11, S4);
+	mm_stranssen(n, A22, S4, P4);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sum_parallel(n, A11, A22, S5);
+	matrix_sum_parallel(n, B11, B22, S6);
+	mm_stranssen(n, S5, S6, P5);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sub_parallel(n, A12, A22, S7);
+	matrix_sum_parallel(n, B21, B22, S8);
+	mm_stranssen(n, S7, S8, P6);
+}
+#pragma omp task firstprivate(n)
+{
+	matrix_sub_parallel(n, A11, A21, S9);
+	matrix_sum_parallel(n, B11, B12, S10);
 	mm_stranssen(n, S9, S10, P7);
-	
+}
+#pragma omp taskwait
 	double *C11 = (double*)malloc(n*n*sizeof(double));
 	matrix_sum_parallel(n, P4, P5, C11);
 	matrix_sum_parallel(n, C11, P6, C11);
@@ -246,11 +263,13 @@ int main(int argc, char *argv[]) {
 	init_matrix(A, N, N);
 	init_matrix(B, N, N);
 
+	
 	double *C_seq = (double*)malloc(N*N*sizeof(double));
 	before = wall_clock_time();
 	mm_seq(N, A, B, C_seq);
 	after = wall_clock_time();
 	printf("mm_seq finished in %f s\n",((float)(after - before)) / 1000000000);
+	
 
 	double *C = (double*)malloc(N*N*sizeof(double));
 	before = wall_clock_time();

@@ -70,8 +70,20 @@ bool check_correctness(int N, double *res1, double *res2) {
 }
 
 /* Utils end */
+void mm_seq_ijk(int N, double *A, double *B, double *C) {
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			double sum = 0;
+			for (int k = 0; k < N; ++k) {
+				sum += A[i*N+k] * B[k*N+j];
+			}
+			C[i*N+j] = sum;
+		}
+	}
+}
 
-void mm_seq(int N, double *A, double *B, double *C) {
+
+void mm_seq_ikj(int N, double *A, double *B, double *C) {
     for (int i = 0; i < N; ++i) {
         for (int k = 0; k < N; ++k) {
             double t = A[i*N+k];
@@ -263,17 +275,21 @@ int main(int argc, char *argv[]) {
 	init_matrix(A, N, N);
 	init_matrix(B, N, N);
 
-	
-	double *C_seq = (double*)malloc(N*N*sizeof(double));
+	double *C_seq1 = (double*)malloc(N*N*sizeof(double));
 	before = wall_clock_time();
-	mm_seq(N, A, B, C_seq);
+	mm_seq_ijk(N, A, B, C_seq1);
 	after = wall_clock_time();
-	printf("mm_seq finished in %f s\n",((float)(after - before)) / 1000000000);
+	printf("mm_seq_ijk finished in %f s\n",((float)(after - before)) / 1000000000);
 	
-
-	double *C = (double*)malloc(N*N*sizeof(double));
+	double *C_seq2 = (double*)malloc(N*N*sizeof(double));
 	before = wall_clock_time();
-	mm_parallel(N, A, B, C);
+	mm_seq_ikj(N, A, B, C_seq2);
+	after = wall_clock_time();
+	printf("mm_seq_ikj finished in %f s\n",((float)(after - before)) / 1000000000);
+
+	double *C_para = (double*)malloc(N*N*sizeof(double));
+	before = wall_clock_time();
+	mm_parallel(N, A, B, C_para);
 	after = wall_clock_time();
 	printf("mm_parallel finished in %f s\n",((float)(after - before)) / 1000000000);
 
@@ -282,12 +298,17 @@ int main(int argc, char *argv[]) {
 	mm_stranssen(N, A, B, C_stranssen);
 	after = wall_clock_time();
 	printf("mm_stranssen finished in %f s\n",((float)(after - before)) / 1000000000);
-
-	if (!check_correctness(N, C, C_seq)) {
-		printf("C_seq result error\n");
+	
+	if (!check_correctness(N, C_seq1, C_seq2)) {
+		printf("C_seq1 result error\n");
 		return -1;
 	}
-	if (!check_correctness(N, C_stranssen, C_seq)) {
+
+	if (!check_correctness(N, C_para, C_seq2)) {
+		printf("C_para result error\n");
+		return -1;
+	}
+	if (!check_correctness(N, C_stranssen, C_seq2)) {
 		printf("C_stranssen result error\n");
 		return -1;
 	}

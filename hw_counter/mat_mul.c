@@ -65,26 +65,33 @@ main(int32_t argc, char *argv[])
     memset(r, 0, N * N * sizeof(int64_t));
     t = clock();
 
-    /* TODO: count L2 cache misses for the next block using RDPMC */
+    /* count L2 cache misses for the next block using RDPMC */
+	unsigned long a, d, c;
+	c = (1UL << 30) + 1;
+	rdpmc(c, a, d);
+	unsigned long l2_before = (a | (d << 32));
 
     /* perform slow multiplication */
     for (uint32_t i=0; i<N; ++i)             /* line   */
         for (uint32_t j=0; j<N; ++j)         /* column */
             for (uint32_t k=0; k<N; ++k)
                 r[i*N + j] += m1[i*N + k] * m2[k*N + j];
+	
+	rdpmc(c, a, d);
+	unsigned long l2_after = (a | (d << 32));
 
     /* clock delta */
     t = clock() - t;
 
-    printf("Multiplication 1 finished in %6.2f s\n",
-           ((float)t)/CLOCKS_PER_SEC);
-
+    printf("Multiplication 1 finished in %6.2f s, L2 cache miss %lu \n", ((float)t)/CLOCKS_PER_SEC, (l2_after - l2_before));
 
     /* result matrix clear; clock init */
     memset(r, 0, N * N * sizeof(int64_t));
     t = clock();
 
-    /* TODO: count L2 cache misses for the next block using RDPMC */
+    /* count L2 cache misses for the next block using RDPMC */
+	rdpmc(c, a, d);
+	l2_before = (a | (d << 32));
 
     /* perform fast(er) multiplication */
     for (uint32_t k=0; k<N; ++k)
@@ -92,11 +99,13 @@ main(int32_t argc, char *argv[])
             for (uint32_t j=0; j<N; ++j)     /* column */
                 r[i*N + j] += m1[i*N + k] * m2[k*N + j];
 
+	rdpmc(c, a, d);
+	l2_after = (a | (d << 32));
+
     /* clock delta */
     t = clock() - t;
 
-    printf("Multiplication 2 finished in %6.2f s\n",
-           ((float)t)/CLOCKS_PER_SEC); 
+    printf("Multiplication 2 finished in %6.2f s, L2 cache miss %lu \n", ((float)t)/CLOCKS_PER_SEC, (l2_after - l2_before)); 
 
     return 0;
 }

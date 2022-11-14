@@ -96,7 +96,6 @@ void mm_seq_ikj(int N, double *A, double *B, double *C) {
 
 void mm_parallel(int N, double *A, double *B, double *C) {
     int i, j, k;
-//#pragma omp parallel for      // wrong! TODO: why?
 #pragma omp parallel for private(i,j,k) shared(A, B, C)
     for (i = 0; i < N; ++i) {
         for (k = 0; k < N; ++k) {

@@ -67,7 +67,7 @@ main(int32_t argc, char *argv[])
 
     /* count L2 cache misses for the next block using RDPMC */
 	unsigned long a, d, c;
-	c = (1UL << 30) + 1;
+	c = 0;
 	rdpmc(c, a, d);
 	unsigned long l2_before = (a | (d << 32));
 
